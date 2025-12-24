@@ -1,0 +1,39 @@
+# Environment
+.env
+.env.local
+.env.*.local
+noninteractive.env
+noninteractive.env.example
+
+# Infrastructure
+~/infra/
+/backups/
+/volumes/
+
+# System
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+logs/
+*.out
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+Thumbs.db
+.DS_Store
