@@ -25,7 +25,7 @@ jobs:
 
       - name: Upload ShellCheck report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: shellcheck-report
           path: shellcheck-report.txt
