@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG=${{ github.ref }}
+          VERSION=${TAG#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Extract changelog entry
+        id: changelog
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          # Extract changelog for this version
+          if grep -q "## \[$VERSION\]" CHANGELOG.md; then
+            CHANGELOG=$(sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | head -n -1)
+            echo "changelog=$CHANGELOG" >> $GITHUB_OUTPUT
+          else
+            echo "changelog=Release $VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          generateReleaseNotes: true
+          artifacts: "setup-vps.sh,noninteractive.env"
+
+      - name: Notify on success
+        run: |
+          echo "## 🎉 Release Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+
+  publish-docs:
+    name: Update Documentation
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: success()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update version in documentation
+        run: |
+          VERSION=${{ github.ref }}
+          VERSION=${VERSION#refs/tags/}
+          echo "Updated documentation for $VERSION"
+          # You can add custom documentation update logic here
+
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: success()
+    steps:
+      - name: Notification
+        run: |
+          echo "✅ Release pipeline completed successfully"
+          echo "Release: ${{ github.ref }}"
+          echo "Repository: ${{ github.repository }}"

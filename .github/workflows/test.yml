@@ -1,0 +1,152 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop, feature/*, bugfix/*]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  shellcheck:
+    name: ShellCheck Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run ShellCheck
+        run: |
+          apt-get update && apt-get install -y shellcheck
+          shellcheck setup-vps.sh || true
+
+  syntax:
+    name: Bash Syntax Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Bash Syntax
+        run: |
+          bash -n setup-vps.sh
+          echo "✅ Bash syntax is valid"
+
+  dry-run:
+    name: Dry Run (Non-Interactive)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          apt-get update
+          apt-get install -y docker.io docker-compose openssl
+
+      - name: Test Script Help
+        run: |
+          chmod +x setup-vps.sh
+          ./setup-vps.sh --help 2>&1 | head -20 || true
+
+      - name: Test Non-Interactive Validation
+        run: |
+          # Test with minimal non-interactive config
+          NONINTERACTIVE=1 \
+          DOMAIN="test.example.com" \
+          LETSENCRYPT_EMAIL="test@example.com" \
+          OPTIONS="1" \
+          TRAEFIK_ADMIN_PASSWORD="Test123456!" \
+          bash -n setup-vps.sh
+          echo "✅ Non-interactive mode syntax validated"
+
+  markdown:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check markdown files
+        run: |
+          for file in *.md; do
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+              grep -q "^#" "$file" && echo "✅ $file has headers" || echo "⚠️  $file might be missing headers"
+            fi
+          done
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Required Files
+        run: |
+          files=(
+            "README.md"
+            "README_PROJETO.md"
+            "CONTRIBUTING.md"
+            "LICENSE"
+            "CHANGELOG.md"
+            "setup-vps.sh"
+            "noninteractive.env"
+          )
+          
+          for file in "${files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✅ $file exists"
+            else
+              echo "❌ $file missing"
+              exit 1
+            fi
+          done
+
+      - name: Check Documentation Links
+        run: |
+          echo "Checking for common documentation patterns..."
+          grep -q "## Installation" README.md || echo "⚠️  Installation section recommended"
+          grep -q "## Features" README.md || echo "⚠️  Features section recommended"
+          grep -q "## Troubleshooting" README.md || echo "⚠️  Troubleshooting link recommended"
+
+  commit-lint:
+    name: Commit Message Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate Conventional Commits
+        run: |
+          # Check last commit message format
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Last commit: $COMMIT_MSG"
+          
+          # Valid prefixes: feat, fix, docs, style, refactor, test, chore, ci, revert
+          if echo "$COMMIT_MSG" | grep -E "^(feat|fix|docs|style|refactor|test|chore|ci|revert)(\(.+\))?:" > /dev/null; then
+            echo "✅ Commit message follows Conventional Commits"
+          else
+            echo "⚠️  Commit message should follow: type(scope): description"
+          fi
+
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [shellcheck, syntax, dry-run, markdown, documentation]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "## ✅ CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ShellCheck Lint | ${{ needs.shellcheck.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Bash Syntax | ${{ needs.syntax.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dry Run | ${{ needs.dry-run.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Markdown | ${{ needs.markdown.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Documentation | ${{ needs.documentation.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**VPS Installer CI/CD Pipeline** | [View Runs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY

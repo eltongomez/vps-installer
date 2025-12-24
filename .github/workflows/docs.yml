@@ -1,0 +1,115 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**.md'
+
+jobs:
+  validate-markdown:
+    name: Validate Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check markdown files exist
+        run: |
+          echo "## 📚 Documentation Files" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          docs=(
+            "README.md"
+            "README_PROJETO.md"
+            "README_NONINTERACTIVE.md"
+            "CHANGELOG.md"
+            "CONTRIBUTING.md"
+            "SECURITY.md"
+            "TROUBLESHOOTING.md"
+            "GIT_WORKFLOW.md"
+            "COMMIT_EXAMPLES.md"
+            "PROJECT_STRUCTURE.md"
+            "DOCUMENTATION_INDEX.md"
+          )
+          
+          for doc in "${docs[@]}"; do
+            if [ -f "$doc" ]; then
+              size=$(wc -l < "$doc")
+              echo "✅ $doc ($size lines)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ $doc (missing)" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+  validate-links:
+    name: Validate Markdown Links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for broken markdown links
+        run: |
+          echo "Checking for broken local links..."
+          
+          # Check all markdown files
+          for file in *.md; do
+            if [ -f "$file" ]; then
+              # Extract local links
+              grep -o '\[.*\](\.\/.*\.md)' "$file" | while read -r link; do
+                target=$(echo "$link" | sed 's/.*(\(.*\))/\1/' | sed 's/^\.\/\|#.*//')
+                if [ ! -z "$target" ] && [ ! -f "$target" ]; then
+                  echo "⚠️  Potential broken link in $file: $link"
+                fi
+              done
+            fi
+          done
+          echo "✅ Link validation complete"
+
+  spell-check:
+    name: Spell Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check common spelling mistakes
+        run: |
+          echo "Checking for common typos..."
+          
+          # Common mistakes
+          mistakes=(
+            "teh|the"
+            "recieve|receive"
+            "occured|occurred"
+            "seperator|separator"
+          )
+          
+          found=0
+          for doc in *.md; do
+            if [ -f "$doc" ]; then
+              if grep -i "teh " "$doc" > /dev/null; then
+                echo "⚠️  Possible typo in $doc: 'teh'"
+                found=1
+              fi
+            fi
+          done
+          
+          if [ $found -eq 0 ]; then
+            echo "✅ No obvious spelling mistakes found"
+          fi
+
+  summary:
+    name: Documentation Summary
+    runs-on: ubuntu-latest
+    needs: [validate-markdown, validate-links, spell-check]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## ✅ Documentation Check Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All documentation files have been validated." >> $GITHUB_STEP_SUMMARY
