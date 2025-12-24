@@ -19,7 +19,7 @@ jobs:
 
       - name: Run ShellCheck
         run: |
-          apt-get update && apt-get install -y shellcheck
+          sudo apt-get update && sudo apt-get install -y shellcheck
           shellcheck setup-vps.sh || true
 
   syntax:
@@ -41,8 +41,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          apt-get update
-          apt-get install -y docker.io docker-compose openssl
+          sudo apt-get update && sudo apt-get install -y docker.io docker-compose openssl
 
       - name: Test Script Help
         run: |
