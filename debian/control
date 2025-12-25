@@ -1,0 +1,53 @@
+Source: vps-installer
+Section: utils
+Priority: optional
+Maintainer: Elton Lima <eltongslima@hotmail.com>
+Uploaders: VPS Installer Team <dev@vps-installer.local>
+Build-Depends: debhelper-compat (= 13),
+               bash (>= 4.0)
+Standards-Version: 4.6.2
+Homepage: https://github.com/eltongomez/vps-installer
+Repository: https://github.com/eltongomez/vps-installer
+Vcs-Git: https://github.com/eltongomez/vps-installer.git
+Vcs-Browser: https://github.com/eltongomez/vps-installer
+
+Package: vps-installer
+Architecture: all
+Version: 2.0.1
+Depends: bash (>= 4.0),
+         curl (>= 7.0),
+         ca-certificates,
+         jq,
+         openssl (>= 1.1),
+         docker.io | docker-ce
+Recommends: docker-compose (>= 1.29) | docker-compose-plugin,
+            postgresql-client (>= 10),
+            git (>= 2.0)
+Suggests: ufw,
+          fail2ban,
+          cron
+Description: Professional VPS Provisioning Tool with 13 Containerized Stacks
+ VPS Installer is an enterprise-grade tool for automated provisioning and 
+ management of containerized services on Linux VPS servers.
+ .
+ Supported stacks:
+  - Traefik (Reverse Proxy + SSL/TLS)
+  - Portainer (Docker Management UI)
+  - Chatwoot (Customer Support Platform)
+  - n8n (Workflow Automation)
+  - Evolution (Email Server)
+  - Evo-AI (AI Integration)
+  - Prometheus + Grafana (Monitoring)
+  - PostgreSQL + Redis (Data Layer)
+  - Backup Scheduler (Automated Backups)
+  - SSH Configuration (Security Hardening)
+  - Restore Backups (Interactive Recovery)
+  - Odoo 17.0 (ERP System)
+ .
+ Features:
+  - Interactive and non-interactive installation modes
+  - Automatic backup with flexible scheduling
+  - Security hardening with SSH ed25519 keys
+  - Health checks on all services
+  - CI/CD ready with environment-based configuration
+  - Professional documentation and troubleshooting guides

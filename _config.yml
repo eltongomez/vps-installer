@@ -1,0 +1,7 @@
+theme: jekyll-theme-cayman
+title: VPS Installer
+description: Professional VPS Provisioning Tool with 13 Containerized Stacks
+show_downloads: true
+github:
+  repository_url: https://github.com/eltongomez/vps-installer
+  is_project_page: false

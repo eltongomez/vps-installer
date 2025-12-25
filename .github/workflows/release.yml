@@ -1,0 +1,38 @@
+name: Release Packages
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-deb:
+    name: Build Debian Package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build .deb package
+        run: |
+          chmod +x packaging/build-deb.sh
+          ./packaging/build-deb.sh
+
+      - name: Upload .deb to Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: packaging/build/*.deb
+
+  homebrew-check:
+    name: Validate Homebrew Formula
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Audit Formula
+        run: |
+          brew audit --strict --online Formula/vps-installer.rb

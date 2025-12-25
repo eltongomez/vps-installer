@@ -15,6 +15,14 @@ vps-installer/
 ├── TROUBLESHOOTING.md           # Guia de troubleshooting
 ├── LICENSE                      # Licença MIT
 │
+├── packaging/                   # 📦 Packaging Scripts
+│   ├── build-deb.sh             # Script build .deb
+│   ├── create-repo.sh           # Script cria repo APT (reprepro)
+│   └── README.md                # Guia de empacotamento
+│   └── publishing_instructions.md # Guia de publicação (APT/Brew)
+├── Formula/                     # 🍺 Homebrew Formula
+│   └── vps-installer.rb
+│
 └── 📁 Estrutura Após Instalação (criada dinamicamente)
     └── ~/infra/
         ├── .env                             # Variáveis de ambiente

@@ -17,19 +17,48 @@ Instalador automatizado para configurar uma VPS com múltiplas stacks de serviç
 - ✅ **UFW Firewall** pré-configurado e ativado
 - ✅ **Fail2ban** para proteção contra força bruta
 - ✅ **Restauração de backups** com opção dedicada (opção 12)
+- ✅ **Instalação via Package Managers** (Homebrew para macOS, APT para Debian/Ubuntu)
 
 ## 🚀 Quick Start
 
-### Execução Interativa (Padrão)
+### Instalação via Package Managers
+
+#### macOS (Homebrew)
+```bash
+brew tap eltongomez/vps-installer
+brew install vps-installer
+vps-installer
+```
+
+#### Debian/Ubuntu (APT)
+```bash
+# Adicionar repositório
+curl -fsSL https://github.com/eltongomez.gpg | sudo apt-key add -
+echo "deb [signed-by=/etc/apt/keyrings/vps-installer.gpg] https://apt.vps-installer.io/ stable main" | \
+  sudo tee /etc/apt/sources.list.d/vps-installer.list
+
+# Instalar
+sudo apt update
+sudo apt install vps-installer
+vps-installer
+```
+
+[Ver documentação completa de Package Managers →](PACKAGE_MANAGERS.md)
+
+### Instalação Manual
+
+#### Execução Interativa (Padrão)
 
 ```bash
+git clone https://github.com/eltongomez/vps-installer.git
+cd vps-installer
 chmod +x setup-vps.sh
 ./setup-vps.sh
 ```
 
 Escolha as stacks desejadas no menu (ex: `1 2 3`).
 
-### Execução Não-Interativa (CI/CD)
+#### Execução Não-Interativa (CI/CD)
 
 1. Crie um arquivo `~/infra/noninteractive.env`:
 ```bash

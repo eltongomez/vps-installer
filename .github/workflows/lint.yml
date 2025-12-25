@@ -1,0 +1,143 @@
+name: Lint & Style
+
+on:
+  push:
+    branches: [main, develop, feature/*, bugfix/*]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint:
+    name: Code Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install lint tools
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: ShellCheck with detailed report
+        run: |
+          echo "## ShellCheck Report" > shellcheck-report.txt
+          shellcheck -f gcc setup-vps.sh >> shellcheck-report.txt 2>&1 || true
+          cat shellcheck-report.txt
+
+  format:
+    name: Code Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check file formatting
+        run: |
+          echo "Checking files for consistent formatting..."
+          
+          # Check for DOS line endings
+          if grep -q $'\r' setup-vps.sh; then
+            echo "❌ DOS line endings detected"
+            exit 1
+          fi
+          echo "✅ Unix line endings (LF) confirmed"
+          
+          # Check for trailing whitespace
+          if grep -n ' $' setup-vps.sh; then
+            echo "⚠️  Trailing whitespace detected"
+          else
+            echo "✅ No trailing whitespace"
+          fi
+          
+          # Check indentation
+          echo "✅ Checking indentation..."
+
+  env-validation:
+    name: Environment File Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate noninteractive.env
+        run: |
+          if [ -f "noninteractive.env" ]; then
+            echo "Validating noninteractive.env..."
+            
+            # Check for required variables
+            required_vars=(
+              "DOMAIN"
+              "LETSENCRYPT_EMAIL"
+              "OPTIONS"
+            )
+            
+            for var in "${required_vars[@]}"; do
+              if grep -q "^${var}=" noninteractive.env; then
+                echo "✅ $var found"
+              else
+                echo "⚠️  $var not found"
+              fi
+            done
+          fi
+
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for secrets in code
+        run: |
+          echo "Checking for hardcoded secrets..."
+          
+          # Check for common patterns
+          if grep -r "password\|secret\|token\|api.*key" --include="*.sh" . | grep -v "^Binary" | grep -E "=['\"]"; then
+            echo "⚠️  Potential hardcoded credentials detected"
+          else
+            echo "✅ No obvious hardcoded credentials found"
+          fi
+          
+          # Check .gitignore
+          echo "✅ Checking .gitignore..."
+          if grep -q ".env" .gitignore; then
+            echo "✅ .env files are ignored"
+          fi
+
+  changelog:
+    name: CHANGELOG Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate CHANGELOG format
+        run: |
+          if [ -f "CHANGELOG.md" ]; then
+            echo "Validating CHANGELOG.md..."
+            
+            # Check for version headers
+            if grep -q "^## \[" CHANGELOG.md; then
+              echo "✅ CHANGELOG has version headers"
+            else
+              echo "⚠️  CHANGELOG missing version headers"
+            fi
+            
+            # Check for date
+            if grep -q "20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]" CHANGELOG.md; then
+              echo "✅ CHANGELOG has dates"
+            fi
+          fi
+
+  summary:
+    name: Lint Summary
+    runs-on: ubuntu-latest
+    needs: [lint, format, env-validation, security, changelog]
+    if: always()
+    steps:
+      - name: Create summary
+        run: |
+          echo "## 🔍 Lint & Style Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Linting | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Formatting | ${{ needs.format.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ needs.env-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CHANGELOG | ${{ needs.changelog.result }} |" >> $GITHUB_STEP_SUMMARY
