@@ -221,7 +221,7 @@ Qualidade:
 ### Próximo Mês
 - [ ] Adicionar testes
 - [ ] Integração com CI/CD
-- [ ] Publicar em package managers
+- [x] Publicar em package managers (APT/Brew support added)
 - [ ] Comunidade e feedback
 
 ---

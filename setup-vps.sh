@@ -9,6 +9,7 @@ INFRA_DIR="$HOME/infra"
 ENV_FILE="$INFRA_DIR/.env"
 SUMMARY_FILE="$INFRA_DIR/resumo-instalacao.txt"
 DATE=$(date +"%Y-%m-%d %H:%M")
+VERSION="2.0.1"
 
 INSTALLED_STACKS=()
 SUMMARY_URLS=()
@@ -16,6 +17,17 @@ SUMMARY_CREDS=()
 SUMMARY_NOTES=()
 
 mkdir -p "$INFRA_DIR"
+
+# Tratamento de argumentos (necessário para packaging)
+if [[ "$1" == "--version" || "$1" == "-v" ]]; then
+  echo "VPS Installer v$VERSION"
+  exit 0
+fi
+
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+  echo "VPS Installer v$VERSION - Automação de Infraestrutura Docker"
+  exit 0
+fi
 
 ############################################
 # FUNÇÕES AUXILIARES
@@ -1030,7 +1042,7 @@ BACKUP_RETENTION=$BACKUP_RETENTION
 CRON_EXPR=$CRON_EXPR
 BACKUP_CONFIG
 
-cat > /usr/local/bin/backup-stack.sh <<'BACKUP_EOF'
+cat > /usr/bin/backup-stack.sh <<'BACKUP_EOF'
 #!/bin/bash
 set -e
 DATE=$(date +%F)
@@ -1088,10 +1100,10 @@ LOG_FILE="/backups/logs/backup-$DATE.log"
 } | tee -a "$LOG_FILE"
 BACKUP_EOF
 
-chmod +x /usr/local/bin/backup-stack.sh
+chmod +x /usr/bin/backup-stack.sh
 
 # Agendar backup com cron
-(crontab -l 2>/dev/null | grep -v backup-stack.sh; echo "$CRON_EXPR /usr/local/bin/backup-stack.sh") | crontab -
+(crontab -l 2>/dev/null | grep -v backup-stack.sh; echo "$CRON_EXPR /usr/bin/backup-stack.sh") | crontab -
 
 INSTALLED_STACKS+=("Backup automático (Frequência: $BACKUP_FREQUENCY, Retenção: ${BACKUP_RETENTION}d)")
 SUMMARY_NOTES+=("Configuração de backup em $INFRA_DIR/backup-config.txt")

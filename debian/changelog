@@ -1,0 +1,30 @@
+vps-installer (2.0.1-1) stable; urgency=medium
+
+  * Add professional Debian package infrastructure
+  * Add Homebrew formula for macOS support
+  * Implement APT repository setup with reprepro
+  * Add debian/copyright with MIT license
+  * Add debian/rules for proper package building
+  * Update debian/control with comprehensive package metadata
+  * Add packaging/build-deb.sh for automated Debian builds
+  * Add packaging/create-repo.sh for APT repository management
+  * Validate package structure against Debian Policy Manual
+  * Ensure compatibility with Ubuntu 20.04+ and Debian 11+
+  * Add GitHub Actions workflow for automated package builds
+
+ -- Elton Lima <eltongslima@hotmail.com>  Wed, 25 Dec 2025 01:00:00 -0300
+
+vps-installer (2.0.0-1) stable; urgency=high
+
+  * Production Release v2.0.0
+  * Add 13 containerized service stacks
+  * Implement interactive and non-interactive modes
+  * Add backup scheduler with flexible configuration
+  * Add SSH key generation with ed25519 hardening
+  * Create comprehensive documentation suite
+  * Add security policies and troubleshooting guides
+  * Establish git workflow with conventional commits
+
+ -- Elton Lima <eltongslima@hotmail.com>  Mon, 23 Dec 2025 00:00:00 -0300
+
+  -- Elton Lima <eltongslima@hotmail.com>  Wed, 24 Dec 2025 10:10:00 +0000
